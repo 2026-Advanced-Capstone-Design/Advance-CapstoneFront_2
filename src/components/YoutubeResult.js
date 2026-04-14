@@ -1,9 +1,17 @@
-import React from 'react';
+import React , {useEffect, useState} from 'react';
 import { SentimentChart } from "./youtube-analysis/SentimentChart";
 import { BotDetection } from "./youtube-analysis/BotDetection";
 import { SentimentSummary } from "./youtube-analysis/SentimentSummary";
+import axios from 'axios';
+import { BeatLoader } from "react-spinners";
 
-const YoutubeResult = ({ data }) => {
+const BASE_URL = 'http://54.180.222.248:8080';
+
+const YoutubeResult = ({ result_id }) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const displayData = data && !data.error ? data : {
     videoInfo: {
       thumbnail: null,
@@ -20,7 +28,37 @@ const YoutubeResult = ({ data }) => {
       negative: "몇몇 시청자들은 정보의 정확성에 의문을 제기하고 있습니다.",
     },
   };
+  /*
+  useEffect(() => {
+    // 데이터 요청 함수
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${BASE_URL}/api/v1/articles/${result_id}/result`);
+        // 서버 응답 데이터 저장 (mockData 형식과 일치해야 함)
+        setData(response.data);
+      } catch (e) {
+        setError(e);
+        console.error("데이터를 불러오는데 실패했습니다:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [result_Id]);
 
+  if (loading) {
+    return (
+      <div style={loadingContainerStyle}>
+        <div className="spinner"><BeatLoader /></div>
+        <p>데이터를 분석하고 있습니다. 잠시만 기다려 주세요...</p>
+      </div>
+    );
+  }
+  if (error) {
+    return <div>데이터를 불러오는 중 오류가 발생했습니다: {error.message}</div>;
+  }
+  */
   return (
     <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto py-6 animate-in fade-in duration-700">
       

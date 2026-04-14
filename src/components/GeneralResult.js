@@ -11,6 +11,11 @@ function GeneralResult({result_Id}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // 피드백 관련 상태
+  const [feedbackStatus, setFeedbackStatus] = useState(null); // 'up', 'down', null
+  const [showCommentBox, setShowCommentBox] = useState(false);
+  const [comment, setComment] = useState('');
+
   // 백엔드 연동 전 임의 데이터
   const initialFact = Math.floor(Math.random() * 101);
   const initialNeutral = Math.floor(Math.random() * 101);
@@ -116,6 +121,37 @@ function GeneralResult({result_Id}) {
     });
   };
 
+  // 따봉 클릭
+  const handleThumbUp = () => {
+    setFeedbackStatus('up');
+    setShowCommentBox(false);
+  };
+
+  // 썸다운 클릭
+  const handleThumbDown = () => {
+    setFeedbackStatus('down');
+    setShowCommentBox(true);
+  };
+
+  // 피드백 창 취소
+  const handleCancel = () => {
+    setShowCommentBox(false);
+    if (!comment.trim()) {
+      setFeedbackStatus(null);
+    }
+  };
+
+  // 피드백 전송
+  const handleSendFeedback = async () => {
+    try {
+      // await axios.post('/api/feedback', { status: 'down', comment });
+      alert("피드백이 전송되었습니다.");
+      setShowCommentBox(false);
+    } catch (error) {
+      console.error("피드백 전송 실패", error);
+    }
+  };
+
   return (
     <div className="result-container">
       {/* 제목 및 요약 */}
@@ -155,6 +191,42 @@ function GeneralResult({result_Id}) {
           {JSON.stringify(result_Id, null, 2)}
         </pre>
       </article>
+
+      <hr className="divider" />
+
+      {/* 피드백 섹션 */}
+      <section className="feedback-section">
+        <p className="feedback-title">이 분석 결과가 도움이 되었나요?</p>
+        <div className="feedback-buttons">
+          <button 
+            className={`feedback-btn ${feedbackStatus === 'up' ? 'active' : ''}`}
+            onClick={handleThumbUp}
+          >
+            👍
+          </button>
+          <button 
+            className={`feedback-btn ${feedbackStatus === 'down' ? 'active' : ''}`}
+            onClick={handleThumbDown}
+          >
+            👎
+          </button>
+        </div>
+
+        {/* 피드백 작성 창 (조건부 렌더링) */}
+        {showCommentBox && (
+          <div className="comment-box-container">
+            <textarea 
+              placeholder="어떤 점이 아쉬웠는지 알려주세요..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+            <div className="comment-actions">
+              <button className="cancel-btn" onClick={handleCancel}>취소</button>
+              <button className="send-btn" onClick={handleSendFeedback}>보내기</button>
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

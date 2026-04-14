@@ -46,7 +46,7 @@ const pollStatus = async (articleId) => {
     const interval = setInterval(async () => {
       try {
         const res = await axios.get(`${BASE_URL}/api/v1/articles/${articleId}/status`);
-        const status = res.data.data.status;
+        const status = res.data.data.status ;
         if (status === 'COMPLETED') {
           clearInterval(interval);
           resolve();
