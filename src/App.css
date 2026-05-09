@@ -89,6 +89,7 @@
 }
 .container.searched .logo-img {
   width: 120px;
+  display: hidden;
 }
 .logo-container {
   cursor: pointer;
@@ -276,4 +277,15 @@ textarea {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Youtube 탭 활성화 스타일 */
+.tab-group button.youtube-active {
+  background: #ffe0e0;
+  color: #ff0000;
+  font-weight: bold;
+}
+
+.search-submit-btn.youtube {
+  background: #ff0000;
 }

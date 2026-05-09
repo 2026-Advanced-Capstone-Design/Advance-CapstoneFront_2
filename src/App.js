@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import GeneralResult from './components/GeneralResult';
 import YoutubeResult from './components/YoutubeResult';
+import AdminResult from './components/AdminResultList';
 import logoImg from './sources/image.png';
 import mainImg from './sources/newslensLogo.png';
 import axios from 'axios';
@@ -11,6 +12,7 @@ const BASE_URL = 'http://54.180.222.248:8080';
 function App() {
   const [isSearched, setIsSearched] = useState(false);
   const [inputText, setInputText] = useState('');
+  const [fixedInput, setFixedInput] = useState('');
   const [activeTab, setActiveTab] = useState('텍스트');
   const [renderedTab, setRenderedTab] = useState('텍스트');
   const [selectedImage, setSelectedImage] = useState(null); // 업로드된 이미지 상태
@@ -48,24 +50,37 @@ const tabtoInputType = {
 };
 
 const handleSearch = async () => {
-  // 텍스트가 없거나 이미지도 없는 경우 방지
-  if (!inputText.trim() && !selectedImage) {
+  if (activeTab === '텍스트' && inputText.trim().length < 50) {
+    alert("텍스트는 50글자 이상 입력해주세요.");
+    return;
+  }
+  if (activeTab !== '이미지' && !inputText.trim()) {
     alert("내용을 입력해주세요!");
+    return;
+  }
+  if (activeTab === '이미지' && !selectedImage) {
+    alert("이미지를 업로드해주세요!");
     return;
   }
 
   setRenderedTab(activeTab);
+  // 기존 결과 초기화 (재검색 시 결과 섹션 리셋)
+  setIsSearched(false);
+  setApiData(null);
+
+  // 다음 tick에 다시 true로 설정해 컴포넌트 리마운트 유도
+  await new Promise(resolve => setTimeout(resolve, 0));
   setIsSearched(true);
-  setApiData(null); // 이전 결과 초기화
+  setFixedInput(inputText);
 
   try {
     if (activeTab === 'Youtube') {
       // Youtube는 ngrok 서버로
       setIsSearched(true);
-      const res = await axios.post(`{BASE_URL}/api/youtube/analysis`, {
+      const res = await axios.post(`${BASE_URL}/api/youtube/analysis`, {
         youtubeUrl : inputText
       });
-      setApiData(res.data);
+      setApiData(res.data.data.requestId);
     } else {
       // 텍스트/이미지/URL은 EC2 백엔드로
       let res;
@@ -91,22 +106,15 @@ const handleSearch = async () => {
   }
 };
 
-const testSearch = async () => {
-  setApiData(null); // 이전 결과 초기화
-
-  try {
-    const res = await axios.get(`${BASE_URL}/api/v1/articles/12/result`);
-    setApiData(res.data);
-  } catch (error) {
-    console.error("데이터 요청 중 에러 발생:", error);
-    setApiData({ error: "데이터를 불러오는데 실패했습니다." });
-  }
-};
-
   // 이미지 업로드
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 50 * 1024 * 1024) {
+        alert("이미지 파일은 50MB 이하만 업로드 가능합니다.");
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelectedImage(reader.result);
@@ -120,6 +128,11 @@ const testSearch = async () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleAdminList = () => {
+    setRenderedTab('Admin');
+    setIsSearched(true);
+  }
+
   const tabs = ['텍스트', '이미지', 'URL', 'Youtube'];
 
   return (
@@ -128,7 +141,7 @@ const testSearch = async () => {
             isSearched ? 'top-2 left-4'           // 검색 후: 왼쪽 상단 고정
                       : 'top-2 left-4'          // 검색 전: 홈 화면 왼쪽 상단 (원하는 위치로 조절 가능)
             }`} 
-            onClick={() => window.location.reload()}
+            onClick={handleAdminList}
       >
         <img src={logoImg} alt="Logo" className="h-16 mr-2" /> 
 
@@ -181,23 +194,24 @@ const testSearch = async () => {
                 {tabs.map(tab => (
                   <button
                     key={tab}
-                    className={activeTab === tab ? 'active' : ''}
+                    className={
+                      activeTab === tab
+                        ? tab === 'Youtube' ? 'youtube-active' : 'active'
+                        : ''
+                    }
                     onClick={() => setActiveTab(tab)}
                   >
                     {tab}
                   </button>
                 ))}
               </div>
-              <button className="search-submit-btn" onClick={handleSearch}>
+              <button
+                className={`search-submit-btn ${activeTab === 'Youtube' ? 'youtube' : ''}`}
+                onClick={handleSearch}
+              >
                 <span className="magnifier">🔍</span>
               </button>
-              <button className="search-submit-btn" onClick={testSearch}>
-                <span className="magnifier">테스트용</span>
-              </button>
             </div>
-            <pre style={{ backgroundColor: '#f4f4f4', padding: '10px'}}>
-              {JSON.stringify(apiData, null, 2)}
-            </pre>
           </div>
       </header>
 
@@ -205,11 +219,12 @@ const testSearch = async () => {
       {isSearched && (
         <main className="results-section">
           {renderedTab === 'Youtube' ? (
-            <YoutubeResult data={apiData} youtubeUrl={inputText}/>
+            <YoutubeResult result_Id={apiData} youtubeUrl={fixedInput} />
+          ) : renderedTab === 'Admin' ? (
+            <AdminResult />
           ) : (
-            <GeneralResult result_Id={apiData} inputText={inputText} type={activeTab} />
-          )
-          }
+            <GeneralResult result_Id={apiData} inputText={fixedInput} />
+          )}
         </main>
       )}
     </div>

@@ -8,20 +8,18 @@ import { BeatLoader } from "react-spinners";
 
 const BASE_URL = 'http://54.180.222.248:8080';
 
-const YoutubeResult = ({ result_id, youtubeUrl }) => {
+const YoutubeResult = ({ result_Id, youtubeUrl }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const cleanUrl = youtubeUrl ? String(youtubeUrl).trim() : '';
 
   const displayData = data && !data.error ? {
     videoInfo: {
       thumbnail: null,
       title: data.result.videoTitle,
-      channel: data.result.channel_name,
-      views: data.result.view_count,
-      date: data.result.published_at
+      channel: data.result.channelName,
+      views: data.result.viewCount,
+      date: data.result.publishedAt
     },
     sentiment: {
       positive: data.result.positive,
@@ -34,9 +32,9 @@ const YoutubeResult = ({ result_id, youtubeUrl }) => {
       botPercentage: data.result.botPct
     },
     summary: {
-      positive: data.result.summary,
-      neutral:  data.result.summary,
-      negative:  data.result.summary
+      positive: data.result.positiveSummary,
+      neutral:  data.result.negativeSummary,
+      negative:  data.result.neutralSummary
     },
     comments : data.result.comments
   } : {
@@ -90,22 +88,26 @@ const YoutubeResult = ({ result_id, youtubeUrl }) => {
       }
     ]
   };
-  /*
+
   useEffect(() => {
-    // 데이터 요청 함수
+    let timer;
+
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${BASE_URL}/api/youtube/analysis/${result_id}`);
-
-        if (response.status === 200) {
-          setData(response.data);
+        const response = await axios.get(`${BASE_URL}/api/youtube/analysis/${result_Id}`);
+        console.log(response.data);
+        if (response.data.data.status === "PROCESSING") {
+          console.log("분석 진행 중 (3초 간격)");
+          timer = setTimeout(fetchData, 3000);
+        } else {
+          setData(response.data.data);
           setLoading(false);
         }
       } catch (e) {
         if (e.response && e.response.status === 404) {
-          console.log("분석 진행 중 (3초 간격)");
-          timer = setTimeout(fetchData, 3000);
+          console.log("데이터를 찾을 수 없음 (3초 뒤 재시도)");
+          //timer = setTimeout(fetchData, 3000);
         } else {
           setError(e);
           console.error("데이터를 불러오는데 실패했습니다:", e);
@@ -113,7 +115,7 @@ const YoutubeResult = ({ result_id, youtubeUrl }) => {
         } 
       }
     };
-    fetchData();
+    timer = setTimeout(fetchData, 3000);
 
     return () => {
       if (timer) clearTimeout(timer);
@@ -131,7 +133,6 @@ const YoutubeResult = ({ result_id, youtubeUrl }) => {
   if (error) {
     return <div>데이터를 불러오는 중 오류가 발생했습니다: {error.message}</div>;
   }
-  */
 
   const getEmbedUrl = (url) => {
     if (!url) return null;
@@ -207,6 +208,15 @@ const YoutubeResult = ({ result_id, youtubeUrl }) => {
       </div>
     </div>
   );
+};
+
+const loadingContainerStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '100vh',
+  fontSize: '1.2rem'
 };
 
 export default YoutubeResult;
