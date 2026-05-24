@@ -409,21 +409,39 @@ function ResultBlock({ resultId, isOpen, onToggle }) {
    메인 페이지
 ───────────────────────────────────────── */
 function AdminResultList() {
-  const [page, setPage] = useState(0); // 0-based
+  const [page, setPage] = useState(0);
   const [openId, setOpenId] = useState(null);
 
-  const startId = page * PAGE_SIZE;
-  const ids = Array.from({ length: PAGE_SIZE }, (_, i) => startId + i);
+  // 추가
+  const [searchInput, setSearchInput] = useState('');
+  const [searchId, setSearchId] = useState(null); // null이면 일반 페이지 모드
 
-  const handleToggle = (id) => {
-    setOpenId(prev => (prev === id ? null : id));
+  const handleSearch = () => {
+    const id = parseInt(searchInput, 10);
+    if (isNaN(id) || id < 0) {
+      alert('올바른 Result ID를 입력해주세요.');
+      return;
+    }
+    setSearchId(id);
+    setOpenId(id); // 바로 열어줌
+  };
+
+  const handleSearchClear = () => {
+    setSearchId(null);
+    setSearchInput('');
+    setOpenId(null);
   };
 
   const handlePageChange = (dir) => {
-    setPage(prev => prev + dir);
+    const next = page + dir;
+    if (next < 0) return;
+    setPage(next);
     setOpenId(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const startId = page * PAGE_SIZE;
+  const ids = Array.from({ length: PAGE_SIZE }, (_, i) => startId + i);
 
   return (
     <div className="admin-page">
@@ -435,33 +453,76 @@ function AdminResultList() {
         </span>
       </div>
 
-      {/* 블럭 목록 */}
-      {ids.map(id => (
-        <ResultBlock
-          key={`${page}-${id}`}
-          resultId={id}
-          isOpen={openId === id}
-          onToggle={() => handleToggle(id)}
+      {/* ID 검색바 */}
+      <div className="id-search-bar">
+        <input
+          type="number"
+          min="0"
+          className="id-search-input"
+          placeholder="Result ID 직접 입력..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
         />
-      ))}
-
-      {/* 페이지네이션 */}
-      <div className="pagination">
-        <button
-          className="page-btn"
-          disabled={page === 0}
-          onClick={() => handlePageChange(-1)}
-        >
-          ← 이전
-        </button>
-        <span className="page-indicator">{page + 1} 페이지</span>
-        <button
-          className="page-btn"
-          onClick={() => handlePageChange(1)}
-        >
-          다음 →
-        </button>
+        <button className="id-search-btn" onClick={handleSearch}>조회</button>
+        {searchId !== null && (
+          <button className="id-search-clear-btn" onClick={handleSearchClear}>
+            ✕ 목록으로
+          </button>
+        )}
       </div>
+
+      {/* 검색 모드 or 일반 목록 모드 */}
+      {searchId !== null ? (
+        // 검색 모드: 해당 ID 하나만 표시
+        <div>
+          <div className="search-mode-label">
+            Result ID {searchId} 조회 결과
+          </div>
+          <ResultBlock
+            key={`search-${searchId}`}
+            resultId={searchId}
+            isOpen={openId === searchId}
+            onToggle={() => setOpenId(prev => prev === searchId ? null : searchId)}
+          />
+        </div>
+      ) : (
+        // 일반 목록 모드
+        <>
+          {ids.map(id => (
+            <ResultBlock
+              key={`${page}-${id}`}
+              resultId={id}
+              isOpen={openId === id}
+              onToggle={() => setOpenId(prev => prev === id ? null : id)}
+            />
+          ))}
+
+          <div className="pagination">
+            <button
+              className="page-btn page-btn-large"
+              disabled={page < 10}
+              onClick={() => handlePageChange(-10)}
+            >
+              ◀◀ 100
+            </button>
+            <button
+              className="page-btn"
+              disabled={page === 0}
+              onClick={() => handlePageChange(-1)}
+            >
+              ← 이전
+            </button>
+            <span className="page-indicator">{page + 1} 페이지</span>
+            <button className="page-btn" onClick={() => handlePageChange(1)}>
+              다음 →
+            </button>
+            <button className="page-btn page-btn-large" onClick={() => handlePageChange(10)}>
+              100 ▶▶
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

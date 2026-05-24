@@ -126,7 +126,6 @@ function GeneralResult({result_Id, inputText}) {
     cotReasons: {
       factRatio: '사실 기반 분석 이유가 여기에 표시됩니다.',
       emotionNeutrality: '감정적 중립도 분석 이유가 여기에 표시됩니다.',
-      omissionNeutrality: '생략 중립도 분석 이유가 여기에 표시됩니다.',
       bias: '편향도 분석 이유가 여기에 표시됩니다.',
     },
     content: "최근 인공지능 기술은 급격하게 발전하고 있습니다. 하지만 개인정보 유출 문제는 여전히 해결되지 않은 숙제입니다. 데이터의 투명성을 확보하는 것이 무엇보다 중요합니다.",
@@ -150,22 +149,21 @@ function GeneralResult({result_Id, inputText}) {
       reliability: data.totalScore || 0,
       factBased: Math.round((data.indicators.factRatio || 0) * 100),
       neutrality: Math.round((data.indicators.emotionNeutrality || 0) * 100),
-      omission: Math.round((data.indicators.omissionNeutrality || 0) * 100),
       bias: Math.round((data.indicators.biasScore || 0) * 100)
     },
     biasLabel: data.bias?.spectrumLabel || data.bias?.biasDirection || '',
     cotReasons: {
-      factRatio: data.cotReasons?.vocab || '',
-      emotionNeutrality: data.cotReasons?.framing || '',
-      omissionNeutrality: data.cotReasons?.omission || '',
-      bias: data.cotReasons?.citation || data.bias?.biasReason || '',
+      factRatio: data.indicators.factCheckReason || '',
+      emotionNeutrality: data.cotReasons.emotionNeutrality || '',
+      bias: data.bias.biasReason || '',
     },
     content: data.originalText || '-',
     highlights: (data.sentences || []).map(s => ({
       text:            s.sentenceText,
-      type:            'pos',
+      type:            s.highlightType,
+      color:           'pos',
       highlightReason: HIGHLIGHT_REASON_MAP[s.highlightReason] || s.highlightReason || '',
-      biasScore:       s.biasScore,
+      biasScore:       s.highlightScore,
     })),
     sources: [
 
@@ -175,6 +173,7 @@ function GeneralResult({result_Id, inputText}) {
   
 useEffect(() => {
   let timer;
+  if (!result_Id) return;
 
   // 데이터 요청 함수
   const fetchData = async () => {
@@ -198,7 +197,7 @@ useEffect(() => {
       } 
     }
   };
-  timer = setTimeout(fetchData, 3000);
+  timer = setTimeout(fetchData, 10000);
 
   return () => {
     if (timer) clearTimeout(timer);
@@ -272,7 +271,7 @@ function HighlightSpan({ highlight }) {
     <>
       <span
         ref={spanRef}
-        className={`highlight ${highlight.type === 'pos' ? 'pos' : 'neg'}`}
+        className={`highlight ${highlight.color === 'pos' ? 'pos' : 'neg'}`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -459,12 +458,6 @@ const scrollToSection = (ref, sectionName) => {
                 tooltipKey="neutrality"
               />
               <ScoreBar
-                label="생략 중립도"
-                score={displayData.score.omission}
-                color={getColor(displayData.score.omission)}
-                tooltipKey="omission"
-              />
-              <ScoreBar
                 label="편향도"
                 subLabel={displayData.biasLabel}
                 score={displayData.score.bias}
@@ -491,12 +484,6 @@ const scrollToSection = (ref, sectionName) => {
                 score={displayData.score.neutrality}
                 color={getColor(displayData.score.neutrality)}
                 reason={displayData.cotReasons.emotionNeutrality}
-              />
-              <ReasonItem
-                label="생략 중립도"
-                score={displayData.score.omission}
-                color={getColor(displayData.score.omission)}
-                reason={displayData.cotReasons.omissionNeutrality}
               />
               <ReasonItem
                 label={`편향도${displayData.biasLabel ? ` (${displayData.biasLabel})` : ''}`}

@@ -16,7 +16,7 @@ const CommentList = ({ comments }) => {
     <div className="space-y-4 mt-8">
       {comments.map((comment, index) => (
         <div
-          key={comment.author_id + index}
+          key={comment.authorId + index}
           className={`relative p-5 rounded-xl border-2 transition-all hover:shadow-md ${getBorderColor(comment.sentiment)}`}
         >
           {/* 우측 상단: 좋아요 및 감성 점수 */}
@@ -28,7 +28,7 @@ const CommentList = ({ comments }) => {
             <div className="flex items-center gap-2 ml-2 border-l pl-3 border-gray-300">
               <span className="text-xs font-bold text-gray-400"></span>
               <span className="text-sm font-mono font-semibold text-gray-600">
-                {(comment.sentiment_score).toFixed(0)}%
+                {(comment.sentimentScore)*100}%
               </span>
             </div>
           </div>
@@ -44,13 +44,13 @@ const CommentList = ({ comments }) => {
           <div className="flex items-center justify-between mt-auto">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-gray-700">
-                {comment.author_name}
+                {comment.authorName}
               </span>
               
               {comment.is_bot && (
                 <div className="flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-xs font-bold border border-amber-200">
                   <Bot className="w-3 h-3" />
-                  <span>BOT {comment.bot_score}</span>
+                  <span>BOT {comment.botScore}</span>
                 </div>
               )}
             </div>

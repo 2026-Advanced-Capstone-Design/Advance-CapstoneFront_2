@@ -496,6 +496,92 @@
   margin-right: 6px;
 }
 
+/* ── ID 검색바 ── */
+.id-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.id-search-input {
+  padding: 8px 14px;
+  font-size: 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  width: 200px;
+  transition: border-color 0.15s;
+}
+
+.id-search-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* 숫자 input 화살표 제거 */
+.id-search-input::-webkit-outer-spin-button,
+.id-search-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.id-search-btn {
+  padding: 8px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  background: #6366f1;
+  color: white;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.id-search-btn:hover {
+  background: #4f46e5;
+}
+
+.id-search-clear-btn {
+  padding: 8px 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.id-search-clear-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+/* ── 검색 모드 레이블 ── */
+.search-mode-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #6366f1;
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  background: #eef2ff;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+/* ── 100개 이동 버튼 ── */
+.page-btn-large {
+  font-size: 0.8rem;
+  padding: 8px 14px;
+  color: #6b7280;
+  border-color: #e5e7eb;
+}
+
+.page-btn-large:hover:not(:disabled) {
+  color: #374151;
+}
+
 /* ── 반응형 ── */
 @media (max-width: 600px) {
   .grid-2, .grid-3 {

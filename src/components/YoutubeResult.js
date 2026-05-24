@@ -100,6 +100,10 @@ const YoutubeResult = ({ result_Id, youtubeUrl }) => {
         if (response.data.data.status === "PROCESSING") {
           console.log("분석 진행 중 (3초 간격)");
           timer = setTimeout(fetchData, 3000);
+        } else if(response.data.data.status === "FAILED") {
+          setError(response.data.data.errorMessage);
+          console.error("1데이터를 불러오는데 실패했습니다:", error);
+          setLoading(false);
         } else {
           setData(response.data.data);
           setLoading(false);
@@ -107,15 +111,15 @@ const YoutubeResult = ({ result_Id, youtubeUrl }) => {
       } catch (e) {
         if (e.response && e.response.status === 404) {
           console.log("데이터를 찾을 수 없음 (3초 뒤 재시도)");
-          //timer = setTimeout(fetchData, 3000);
+          timer = setTimeout(fetchData, 3000);
         } else {
           setError(e);
-          console.error("데이터를 불러오는데 실패했습니다:", e);
+          console.error("2데이터를 불러오는데 실패했습니다:", e);
           setLoading(false);
         } 
       }
     };
-    timer = setTimeout(fetchData, 3000);
+    timer = setTimeout(fetchData, 8000);
 
     return () => {
       if (timer) clearTimeout(timer);
@@ -187,7 +191,7 @@ const YoutubeResult = ({ result_Id, youtubeUrl }) => {
       {/* 3단: AI 감정별 요약 */}
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 w-full">
         <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-          <span className="text-purple-500">✨</span> AI 감정별 요약
+          <span className="text-purple-500"></span> AI 감정별 요약
         </h3>
         <SentimentSummary data={displayData.summary} />
       </div>
