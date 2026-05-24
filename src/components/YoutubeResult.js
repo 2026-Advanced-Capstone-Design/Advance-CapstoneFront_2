@@ -129,7 +129,7 @@ const YoutubeResult = ({ result_Id, youtubeUrl }) => {
   if (loading) {
     return (
       <div style={loadingContainerStyle}>
-        <div className="spinner"><BeatLoader /></div>
+        <div><BeatLoader /></div>
         <p>데이터를 분석하고 있습니다. 잠시만 기다려 주세요...</p>
       </div>
     );
@@ -180,12 +180,9 @@ const YoutubeResult = ({ result_Id, youtubeUrl }) => {
       </div>
 
       {/* 2단: 댓글 감정 분석 차트 (가로 꽉 채우기) */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 w-full min-h-[500px] flex flex-col">
-        <h3 className="text-lg font-bold mb-8 text-slate-800">댓글 감정 분석</h3>
-        <div className="flex-1 w-full">
-          {/* 차트 컴포넌트 내부의 이중 박스를 제거했으므로 여기서 공간을 꽉 채웁니다 */}
-          <SentimentChart data={displayData.sentiment} />
-        </div>
+      <div className="w-full">
+        <h3 className="text-lg font-bold mb-4 text-slate-800">댓글 감정 분석</h3>
+        <SentimentChart data={displayData.sentiment} />
       </div>
 
       {/* 3단: AI 감정별 요약 */}

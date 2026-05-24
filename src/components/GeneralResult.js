@@ -15,11 +15,11 @@ const TOOLTIP_INFO = {
   bias: '특정 이념·진영으로의 편향 정도입니다. 수치가 높을수록 편향이 강하게 나타납니다.',
 };
 
-const HIGHLIGHT_REASON_MAP = {
-  vocab:    '어휘 편향 — 감정적이거나 편향된 단어가 사용되었습니다.',
-  framing:  '프레이밍 편향 — 특정 시각에서 사건을 구성하고 있습니다.',
-  citation: '인용 편향 — 특정 측의 주장만 인용하고 있습니다.',
-  omission: '생략 편향 — 중요한 정보나 반론이 생략되었습니다.',
+// ── 하이라이트 타입 한글 레이블 ──
+const HIGHLIGHT_TYPE_LABEL = {
+  fact:    '사실',
+  bias:    '편향',
+  emotion: '감정',
 };
 
 // 툴팁 아이콘 컴포넌트
@@ -130,9 +130,9 @@ function GeneralResult({result_Id, inputText}) {
     },
     content: "최근 인공지능 기술은 급격하게 발전하고 있습니다. 하지만 개인정보 유출 문제는 여전히 해결되지 않은 숙제입니다. 데이터의 투명성을 확보하는 것이 무엇보다 중요합니다.",
     highlights: [
-      { text: "급격하게 발전하고 있습니다.",         type: "pos", highlightReason: HIGHLIGHT_REASON_MAP['framing'], biasScore: 0.3 },
-      { text: "개인정보 유출 문제는 여전히 해결되지 않은 숙제입니다.", type: "pos", highlightReason: HIGHLIGHT_REASON_MAP['omission'], biasScore: 0.6 },
-      { text: "투명성을 확보하는 것이 무엇보다 중요합니다.",        type: "pos", highlightReason: HIGHLIGHT_REASON_MAP['vocab'],    biasScore: 0.2 },
+      { text: "급격하게 발전하고 있습니다.",         type: "pos", highlightReason: "framing", biasScore: 0.3 },
+      { text: "개인정보 유출 문제는 여전히 해결되지 않은 숙제입니다.", type: "pos", highlightReason: "omission", biasScore: 0.6 },
+      { text: "투명성을 확보하는 것이 무엇보다 중요합니다.",        type: "pos", highlightReason: "vocab",    biasScore: 0.2 },
     ],
     sources: [
       { url : "https://www.lipsum.com/", title : "Lorem Ipsum" },
@@ -160,10 +160,9 @@ function GeneralResult({result_Id, inputText}) {
     content: data.originalText || '-',
     highlights: (data.sentences || []).map(s => ({
       text:            s.sentenceText,
-      type:            s.highlightType,
-      color:           'pos',
-      highlightReason: HIGHLIGHT_REASON_MAP[s.highlightReason] || s.highlightReason || '',
-      biasScore:       s.highlightScore,
+      type:            s.highlightType,           // 'fact' | 'bias' | 'emotion'
+      highlightReason: s.highlightReason || '',
+      highlightScore:  s.highlightScore  ?? 0.5,
     })),
     sources: [
 
@@ -207,8 +206,8 @@ useEffect(() => {
 if (loading) {
   return (
     <div style={loadingContainerStyle}>
-      <div className="spinner"><BeatLoader /></div>
-      <p>데이터를 분석하고 있습니다. 잠시만 기다려 주세요... (예상 소요시간 : 12초)</p>
+      <div><BeatLoader /></div>
+      <p>데이터를 분석하고 있습니다. 잠시만 기다려 주세요... (예상 소요시간 : 30초)</p>
     </div>
   );
 }
@@ -224,74 +223,86 @@ const getColor = (score) => {
   return '#ea4335';
 };
 
-// 본문 텍스트를 하이라이트 태그로 변환하는 함수
-const renderHighlightedContent = () => {
-  const content = displayData.content;
-  if (!displayData.highlights || displayData.highlights.length === 0) return content;
+// ── highlightScore → CSS 클래스 ──
+// 높을수록(≥0.65) 초록, 낮을수록(≤0.35) 빨강, 중간 노랑
+function scoreToColorClass(score) {
+  if (score >= 0.65) return 'hl-green';
+  if (score >= 0.35) return 'hl-yellow';
+  return 'hl-red';
+}
 
-  const patterns = displayData.highlights
-    .map(h => h.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    .join('|');
-  const regex = new RegExp(`(${patterns})`, 'g');
-
-  return content.split(regex).map((part, index) => {
-    const highlight = displayData.highlights.find(h => h.text === part);
-    if (highlight) {
-      return (
-        <HighlightSpan key={index} highlight={highlight} />
-      );
-    }
-    return part;
-  });
-};
-
+// ── 하이라이트 span + 포탈 툴팁 ──
 function HighlightSpan({ highlight }) {
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0 });
   const spanRef = useRef(null);
-
+ 
+  const colorClass = scoreToColorClass(highlight.highlightScore ?? 0.5);
+  const typeLabel  = HIGHLIGHT_TYPE_LABEL[highlight.type] || highlight.type || '';
+  const scorePct   = Math.round((highlight.highlightScore ?? 0) * 100);
+ 
   const handleMouseEnter = () => {
     const rect = spanRef.current.getBoundingClientRect();
-    const tooltipWidth = 220;
-    const tooltipHeight = 72;
-
+    const tooltipWidth  = 240;
+    const tooltipHeight = 80;
+ 
     let x = rect.left + rect.width / 2 - tooltipWidth / 2;
     if (x + tooltipWidth > window.innerWidth - 12) x = window.innerWidth - tooltipWidth - 12;
     if (x < 12) x = 12;
-
+ 
     const y = rect.top > tooltipHeight + 10
-      ? rect.top - tooltipHeight - 10        // 위쪽에 공간 있으면 위로
-      : rect.bottom + 10;                    // 없으면 아래로
-
+      ? rect.top - tooltipHeight - 10
+      : rect.bottom + 10;
+ 
     setTooltip({ visible: true, x, y });
   };
-
+ 
   const handleMouseLeave = () => setTooltip({ visible: false, x: 0, y: 0 });
-
+ 
   return (
     <>
       <span
         ref={spanRef}
-        className={`highlight ${highlight.color === 'pos' ? 'pos' : 'neg'}`}
+        className={`highlight ${colorClass}`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         {highlight.text}
       </span>
-
+ 
       {tooltip.visible && ReactDOM.createPortal(
         <div
           className="highlight-tooltip-portal"
           style={{ top: tooltip.y, left: tooltip.x }}
         >
+          <span className="highlight-tooltip-type">{typeLabel} 문장</span>
           <span className="highlight-tooltip-reason">{highlight.highlightReason}</span>
           <span className="highlight-tooltip-score">
-            편향 점수: {Math.round((highlight.biasScore ?? 0) * 100)}%
+            {typeLabel} 지수 : {scorePct}%
           </span>
         </div>,
-        document.body   // ← body 직속으로 렌더, 어떤 부모 스타일도 영향 없음
+        document.body
       )}
     </>
   );
+}
+ 
+// ── 본문 텍스트를 하이라이트 태그로 변환 ──
+function renderHighlightedContent(displayData) {
+  const content = displayData.content;
+  if (!displayData.highlights || displayData.highlights.length === 0) return content;
+ 
+  const patterns = displayData.highlights
+    .map(h => h.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|');
+  const regex = new RegExp(`(${patterns})`, 'g');
+ 
+  return content.split(regex).map((part, index) => {
+    const highlight = displayData.highlights.find(h => h.text === part);
+    if (highlight) {
+      return <HighlightSpan key={index} highlight={highlight} />;
+    }
+    return part;
+  });
 }
 
 // 따봉 클릭
@@ -325,65 +336,8 @@ const handleSendFeedback = async () => {
   }
 };
 
-// 클릭 시 해당 섹션으로 부드럽게 이동하는 함수
-const scrollToSection = (ref, sectionName) => {
-  ref.current.scrollIntoView({ behavior: 'smooth' });
-  setActiveSection(sectionName);
-};
-
-// 스크롤 감지 로직 (Intersection Observer)
-// useEffect(() => {
-//   const options = { root: null, rootMargin: '-10% 0px -80% 0px', threshold: 0 };
-  
-//   const observer = new IntersectionObserver((entries) => {
-//     entries.forEach((entry) => {
-//       if (entry.isIntersecting) {
-//         setActiveSection(entry.target.id);
-//       }
-//     });
-//   }, options);
-
-//   const sections = [scoreRef, contentRef, sourceRef, feedbackRef];
-//   sections.forEach(ref => { if(ref.current) observer.observe(ref.current); });
-
-//   return () => observer.disconnect();
-// }, []);
-
   return (
     <div className="result-page-wrapper">
-      {/* 좌측 스크롤 네비게이션 바 */}
-      <nav className="fixed-side-nav">
-        <div className="nav-vertical-line"></div>
-        <button 
-          className={`nav-item ${activeSection === 'score' ? 'active' : ''}`}
-          onClick={() => scrollToSection(scoreRef, 'score')}
-          title="신뢰지수"
-        >
-          <span className="nav-icon">📊</span>
-        </button>
-        <button 
-          className={`nav-item ${activeSection === 'content' ? 'active' : ''}`}
-          onClick={() => scrollToSection(contentRef, 'content')}
-          title="본문"
-        >
-          <span className="nav-icon">📝</span>
-        </button>
-        <button 
-          className={`nav-item ${activeSection === 'source' ? 'active' : ''}`}
-          onClick={() => scrollToSection(sourceRef, 'source')}
-          title="출처"
-        >
-          <span className="nav-icon">🔗</span>
-        </button>
-        <button 
-          className={`nav-item ${activeSection === 'feedback' ? 'active' : ''}`}
-          onClick={() => scrollToSection(feedbackRef, 'feedback')}
-          title="피드백"
-        >
-          <span className="nav-icon">💬</span>
-        </button>
-      </nav>
-
       <div className="result-container">
         {/* 제목 + 키워드 + 핵심 사실 */}
         <header className="result-header" ref={scoreRef}>
@@ -400,7 +354,7 @@ const scrollToSection = (ref, sectionName) => {
 
           {displayData.keyFacts && displayData.keyFacts.length > 0 && (
             <div className="keyfacts-box">
-              <span className="keyfacts-label">핵심 사실</span>
+              <span className="keyfacts-label">핵심 요약</span>
               <ul className="keyfacts-list">
                 {displayData.keyFacts.map((fact, i) => (
                   <li key={i} className="keyfacts-item">
@@ -500,7 +454,9 @@ const scrollToSection = (ref, sectionName) => {
 
         {/* 본문 접이식 */}
         <CollapsibleSection title="본문" sectionRef={contentRef}>
-          <article className="content-body">{renderHighlightedContent()}</article>
+          <article className="content-body" ref={contentRef}>
+            {renderHighlightedContent(displayData)}
+          </article>
         </CollapsibleSection>
 
         <hr className="divider" />

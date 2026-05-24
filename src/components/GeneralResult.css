@@ -338,88 +338,94 @@
   margin: 40px 0;
 }
 
-/* 하이라이트 공통 스타일 */
+/* ════════════════════════════════════════
+   하이라이트 — 새 색상 체계 (scoreToColorClass)
+   ════════════════════════════════════════ */
+ 
+/* 공통 */
 .highlight {
-  position: relative;
-  display: inline;
+  padding: 2px 1px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: filter 0.18s, box-shadow 0.18s;
+  font-weight: 500;
 }
-
-.highlight-tooltip {
-  display: none;
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #3c4043;
-  color: #fff;
-  border-radius: 8px;
-  padding: 8px 12px;
-  width: 220px;
-  z-index: 999;
-  pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-  flex-direction: column;
-  gap: 4px;
+ 
+/* 높은 점수 (≥0.65) — 초록 계열 */
+.highlight.hl-green {
+  background-color: rgba(40, 167, 69, 0.22);
+  border-bottom: 2px solid rgba(40, 167, 69, 0.55);
 }
-
-.highlight:hover .highlight-tooltip {
-  display: flex;
+.highlight.hl-green:hover {
+  filter: brightness(0.92);
+  box-shadow: 0 0 8px rgba(40, 167, 69, 0.3);
 }
-
-.highlight-tooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 5px 5px 0 5px;
-  border-style: solid;
-  border-color: #3c4043 transparent transparent transparent;
+ 
+/* 중간 점수 (0.35–0.64) — 노랑 계열 */
+.highlight.hl-yellow {
+  background-color: rgba(249, 171, 0, 0.22);
+  border-bottom: 2px solid rgba(249, 171, 0, 0.55);
 }
-
+.highlight.hl-yellow:hover {
+  filter: brightness(0.92);
+  box-shadow: 0 0 8px rgba(249, 171, 0, 0.3);
+}
+ 
+/* 낮은 점수 (≤0.34) — 빨강 계열 */
+.highlight.hl-red {
+  background-color: rgba(220, 53, 69, 0.22);
+  border-bottom: 2px solid rgba(220, 53, 69, 0.55);
+}
+.highlight.hl-red:hover {
+  filter: brightness(0.92);
+  box-shadow: 0 0 8px rgba(220, 53, 69, 0.3);
+}
+ 
+/* ════════════════════════════════════════
+   하이라이트 포탈 툴팁
+   ════════════════════════════════════════ */
 .highlight-tooltip-portal {
-  position: fixed;        /* viewport 기준 — 부모 overflow 영향 없음 */
-  z-index: 9999;
-  background: #3c4043;
-  color: #fff;
-  border-radius: 8px;
-  padding: 8px 12px;
-  width: 220px;
+  position: fixed;
+  z-index: 99999;
+  width: 240px;
+  background: #1e2433;
+  border-radius: 10px;
+  padding: 10px 13px;
   pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
+  animation: hlTooltipFadeIn 0.15s ease;
 }
-
+ 
+@keyframes hlTooltipFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+ 
+/* 타입 태그 */
+.highlight-tooltip-type {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a8b4d0;
+}
+ 
+/* 이유 텍스트 */
 .highlight-tooltip-reason {
-  font-size: 0.78rem;
-  line-height: 1.5;
+  font-size: 0.8rem;
+  color: #e2e8f0;
+  line-height: 1.55;
 }
-
+ 
+/* 지수 */
 .highlight-tooltip-score {
   font-size: 0.75rem;
-  color: #f9ab00;
   font-weight: 600;
+  color: #7dd3fc;
   margin-top: 2px;
-}
-
-.highlight.pos {
-  background-color: rgba(40, 167, 69, 0.3);
-  border-bottom: 2px solid rgba(40, 167, 69, 0.5);
-}
-.highlight.pos:hover {
-  background-color: rgba(40, 167, 69, 0.5);
-  box-shadow: 0 0 8px rgba(40, 167, 69, 0.2);
-}
-
-.highlight.neg {
-  background-color: rgba(220, 53, 69, 0.3);
-  border-bottom: 2px solid rgba(220, 53, 69, 0.5);
-}
-.highlight.neg:hover {
-  background-color: rgba(220, 53, 69, 0.5);
-  box-shadow: 0 0 8px rgba(220, 53, 69, 0.2);
 }
 
 /* 본문 */
