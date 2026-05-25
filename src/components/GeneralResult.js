@@ -149,7 +149,7 @@ function GeneralResult({result_Id, inputText}) {
       reliability: data.totalScore || 0,
       factBased: Math.round((data.indicators.factRatio || 0) * 100),
       neutrality: Math.round((data.indicators.emotionNeutrality || 0) * 100),
-      bias: Math.round((data.indicators.biasScore || 0) * 100)
+      bias: Math.round((1 - data.indicators.biasScore || 0) * 100)
     },
     biasLabel: data.bias?.spectrumLabel || data.bias?.biasDirection || '',
     cotReasons: {
@@ -162,7 +162,7 @@ function GeneralResult({result_Id, inputText}) {
       text:            s.sentenceText,
       type:            s.highlightType,           // 'fact' | 'bias' | 'emotion'
       highlightReason: s.highlightReason || '',
-      highlightScore:  s.highlightScore  ?? 0.5,
+      highlightScore:  1-s.highlightScore  ?? 0.5,
     })),
     sources: [
 
@@ -466,7 +466,7 @@ const handleSendFeedback = async () => {
           <ul className="source-list">
             {displayData.sources && displayData.sources.length > 0 ? (
               displayData.sources.map((source, index) => (
-                <li key={index} className="source-item">
+                <li key={index} className="source-item">  
                   {source.url ? (
                     <a href={source.url} target="_blank" rel="noopener noreferrer" className="source-link active">
                       <span className="source-index">{index + 1}.</span> {source.title || "원문 링크"} 🔗

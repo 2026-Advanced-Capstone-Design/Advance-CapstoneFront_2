@@ -24,7 +24,10 @@ const YoutubeResult = ({ result_Id, youtubeUrl }) => {
     sentiment: {
       positive: data.result.positive,
       neutral: data.result.neutral,
-      negative: data.result.negative
+      negative: data.result.negative,
+      totalComments: data.result.total,
+      suspiciousBots: data.result.botCount,
+      botPercentage: data.result.botPct
     },
     botDetection: {
       totalComments: data.result.total,
@@ -179,34 +182,24 @@ const YoutubeResult = ({ result_Id, youtubeUrl }) => {
         </div>
       </div>
 
-      {/* 2단: 댓글 감정 분석 차트 (가로 꽉 채우기) */}
+      {/* 댓글 감정 분석 차트 (가로 꽉 채우기) */}
       <div className="w-full">
         <h3 className="text-lg font-bold mb-4 text-slate-800">댓글 감정 분석</h3>
         <SentimentChart data={displayData.sentiment} />
       </div>
 
-      {/* 3단: AI 감정별 요약 */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 w-full">
-        <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-          <span className="text-purple-500"></span> AI 감정별 요약
-        </h3>
-        <SentimentSummary data={displayData.summary} />
-      </div>
-
-      {/* 4단: 댓글 봇 탐지 */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 w-full">
+      {/* 댓글 봇 탐지 */}
+      {/* <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 w-full">
         <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
           <span className="text-blue-500">🤖</span> 댓글 봇 탐지 분석
         </h3>
         <BotDetection data={displayData.botDetection} />
-      </div>
+      </div> */}
 
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 w-full">
-        <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-          <span className="text-blue-500">📑</span> 댓글 리스트
-        </h3>
-        <CommentList comments={displayData.comments} />
-      </div>
+      {/* AI 감정별 요약 */}
+      <SentimentSummary data={displayData.summary} />
+
+      <CommentList comments={displayData.comments} />
     </div>
   );
 };
